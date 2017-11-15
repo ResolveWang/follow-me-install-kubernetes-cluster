@@ -1,20 +1,28 @@
-# 配置和安装 EFK
+<!-- toc -->
 
-官方文件目录：`cluster/addons/fluentd-elasticsearch`
+tags: EFK, fluentd, elasticsearch, kibana
+
+# 部署 EFK 插件
+
+官方文件目录：`kubernetes/cluster/addons/fluentd-elasticsearch`
 
 ``` bash
 $ ls *.yaml
-es-controller.yaml  es-service.yaml  fluentd-es-ds.yaml  kibana-controller.yaml  kibana-service.yaml
+es-controller.yaml es-rbac.yaml es-service.yaml  fluentd-es-ds.yaml  kibana-controller.yaml  kibana-service.yaml fluentd-es-rbac.yaml
 ```
 
-已经修改好的 yaml 文件见：[EFK](./manifests/EFK)
++ 新加了 `es-rbac.yaml` 和 `fluentd-es-rbac.yaml` 文件，定义了 elasticsearch 和 fluentd 使用的 Role 和 RoleBinding；
+
+已经修改好的 yaml 文件见：[EFK](https://github.com/opsnull/follow-me-install-kubernetes-cluster/blob/master/manifests/EFK)。
 
 
 ## 配置 es-controller.yaml
 
 ``` bash
 $ diff es-controller.yaml.orig es-controller.yaml
-24c24
+22a23
+>       serviceAccountName: elasticsearch
+24c25
 <       - image: gcr.io/google_containers/elasticsearch:v2.4.1-2
 ---
 >       - image: onlyerich/elasticsearch:v2.4.1-2
@@ -28,7 +36,9 @@ $ diff es-controller.yaml.orig es-controller.yaml
 
 ``` bash
 $ diff fluentd-es-ds.yaml.orig fluentd-es-ds.yaml
-26c26
+23a24
+>       serviceAccountName: fluentd
+26c27
 <         image: gcr.io/google_containers/fluentd-elasticsearch:1.22
 ---
 >         image: onlyerich/fluentd-elasticsearch:1.22
@@ -46,12 +56,12 @@ $ diff kibana-controller.yaml.orig kibana-controller.yaml
 
 ## 给 Node 设置标签
 
-定义 DaemonSet `fluentd-es-v1.22` 时设置了 nodeSelector `beta.kubernetes.io/fluentd-ds-ready=true` ，所以需要在期望运行 fluentd 的 Node 上设置该标签；
+DaemonSet `fluentd-es-v1.22` 只会调度到设置了标签 `beta.kubernetes.io/fluentd-ds-ready=true` 的 Node，需要在期望运行 fluentd 的 Node 上设置该标签；
 
 ``` bash
 $ kubectl get nodes
 NAME        STATUS    AGE       VERSION
-10.64.3.7   Ready     1d        v1.6.1
+10.64.3.7   Ready     1d        v1.6.2
 
 $ kubectl label nodes 10.64.3.7 beta.kubernetes.io/fluentd-ds-ready=true
 node "10.64.3.7" labeled
@@ -60,14 +70,13 @@ node "10.64.3.7" labeled
 ## 执行定义文件
 
 ``` bash
+$ pwd
+/root/kubernetes/cluster/addons/fluentd-elasticsearch
+$ ls *.yaml
+es-controller.yaml es-rbac.yaml es-service.yaml  fluentd-es-ds.yaml  kibana-controller.yaml  kibana-service.yaml fluentd-es-rbac.yaml
 $ kubectl create -f .
-replicationcontroller "elasticsearch-logging-v1" created
-service "elasticsearch-logging" created
-daemonset "fluentd-es-v1.22" created
-deployment "kibana-logging" created
-service "kibana-logging" created
+$
 ```
-
 
 ## 检查执行结果
 
@@ -134,6 +143,6 @@ server.basePath: /api/v1/proxy/namespaces/kube-system/services/kibana-logging
 
 ![es-setting](./images/es-setting.png)
 
-创建Index后，可以在 `Discover` 下看到 ElasticSearch logging 中汇聚的日志；
+创建Index后，稍等几分钟就可以在 `Discover` 菜单下看到 ElasticSearch logging 中汇聚的日志；
 
 ![es-home](./images/es-home.png)

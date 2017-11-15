@@ -1,4 +1,8 @@
-# 配置和安装 Heapster
+<!-- toc -->
+
+tags: heapster
+
+# 部署 heapster 插件
 
 到 [heapster release 页面](https://github.com/kubernetes/heapster/releases) 下载最新版本的 heapster
 
@@ -9,15 +13,18 @@ $ mv v1.3.0.zip heapster-1.3.0
 $
 ```
 
-文件目录： `heapster-1.3.0/deploy/kube-config/influxdb`
+官方文件目录： `heapster-1.3.0/deploy/kube-config/influxdb`
 
 ``` bash
 $ cd heapster-1.3.0/deploy/kube-config/influxdb
 $ ls *.yaml
-grafana-deployment.yaml  grafana-service.yaml  heapster-deployment.yaml  heapster-service.yaml  influxdb-deployment.yaml  influxdb-service.yaml
+grafana-deployment.yaml  heapster-deployment.yaml  heapster-service.yaml  influxdb-deployment.yaml
+grafana-service.yaml     heapster-rbac.yaml        influxdb-cm.yaml       influxdb-service.yaml
 ```
 
-已经修改好的 yaml 文件见：[heapster](./manifests/heapster)
++ 新加了 `heapster-rbac.yaml` 和 `influxdb-cm.yaml` 文件，分别定义 RoleBinding 和 inflxudb 的配置；
+
+已经修改好的 yaml 文件见：[heapster](https://github.com/opsnull/follow-me-install-kubernetes-cluster/blob/master/manifests/heapster)。
 
 ## 配置 grafana-deployment
 
@@ -56,9 +63,9 @@ $ diff heapster-deployment.yaml.orig heapster-deployment.yaml
 
 influxdb 官方建议使用命令行或 HTTP API 接口来查询数据库，从 v1.1.0 版本开始默认关闭 admin UI，将在后续版本中移除 admin UI 插件。
 
-开启镜像中 admin UI的办法如下：先导出镜像中的 influxdb 配置文件，开启 admin 插件后，再将配置文件内容写入 ConfigMap，最后挂载到镜像中，达到覆盖原始配置的目的：
+开启镜像中 admin UI的办法如下：先导出镜像中的 influxdb 配置文件，开启 admin 插件后，再将配置文件内容写入 ConfigMap，最后挂载到镜像中，达到覆盖原始配置的目的。相关步骤如下：
 
-注意：manifests 目录已经提供了 [修改后的 ConfigMap 定义文件](./manifests/heapster/influxdb-cm.yaml)
+注意：无需自己导出、修改和创建 ConfigMap，可以直接使用放在 manifests 目录下的 [ConfigMap 文件](https://github.com/opsnull/follow-me-install-kubernetes-cluster/blob/master/manifests/heapster/influxdb-cm.yaml)。
 
 ``` bash
 $ # 导出镜像中的 influxdb 配置文件
@@ -110,15 +117,10 @@ $ diff influxdb-service.yaml.orig influxdb-service.yaml
 $ pwd
 /root/heapster-1.3.0/deploy/kube-config/influxdb
 $ ls *.yaml
-grafana-deployment.yaml  grafana-service.yaml  heapster-deployment.yaml  heapster-service.yaml  influxdb-deployment.yaml  influxdb-service.yaml
+grafana-deployment.yaml  heapster-deployment.yaml  heapster-service.yaml  influxdb-deployment.yaml
+grafana-service.yaml     heapster-rbac.yaml        influxdb-cm.yaml       influxdb-service.yaml
 $ kubectl create -f  .
-deployment "monitoring-grafana" created
-service "monitoring-grafana" created
-deployment "heapster" created
-service "heapster" created
-deployment "monitoring-influxdb" created
-service "monitoring-influxdb" created
-configmap "influxdb-config" created
+$
 ```
 
 ## 检查执行结果
@@ -185,12 +187,12 @@ monitoring-influxdb-884893134-3vb6n     1/1       Running   0          11m
 
 ``` bash
 $ kubectl get svc -n kube-system|grep influxdb
-monitoring-influxdb    10.254.90.236   <nodes>       8086:30171/TCP,8083:30056/TCP   54m
+monitoring-influxdb    10.254.255.183   <nodes>       8086:8670/TCP,8083:8595/TCP   21m
 ```
 
 通过 kube-apiserver 的**非安全端口**访问 influxdb 的 admin UI 界面：
 `http://10.64.3.7:8080/api/v1/proxy/namespaces/kube-system/services/monitoring-influxdb:8083/`
 
-在页面的 “Connection Settings” 的 Host 中输入 node IP， Port 中输入 8086 映射的 nodePort 如上面的 30171，点击 “Save” 即可：
+在页面的 “Connection Settings” 的 Host 中输入 node IP， Port 中输入 8086 映射的 nodePort 如上面的 8670，点击 “Save” 即可：
 
 ![influxdb](./images/influxdb.png)

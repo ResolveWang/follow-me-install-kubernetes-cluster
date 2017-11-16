@@ -136,6 +136,8 @@ $
 
 + `--user=kubelet-bootstrap` 是文件 `/etc/kubernetes/token.csv` 中指定的用户名，同时也写入了文件 `/etc/kubernetes/bootstrap.kubeconfig`；
 
+`bootstrap.kubeconfig`需要同时拷贝到所有节点上。
+
 ### 下载最新的 kubelet 和 kube-proxy 二进制文件
 
 ``` bash
@@ -148,6 +150,8 @@ $
 ```
 
 ## 创建 kubelet bootstrapping kubeconfig 文件
+
+在所有节点上分别执行下面的命令：
 
 ``` bash
 $ # 设置集群参数

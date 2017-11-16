@@ -31,6 +31,11 @@ $
 参考 [05-部署Flannel网络.md](./05-部署Flannel网络.md)
 
 ## 安装和配置 docker
+注意，如果是用的本repo的vagrant file创建的节点，那么需要添加`docker`用户组
+> sudo groupadd docker
+
+然后再将`vagrant`用户加入该组
+> sudo usermod -aG docker ${USER}
 
 ### 下载最新的 docker 二进制文件
 

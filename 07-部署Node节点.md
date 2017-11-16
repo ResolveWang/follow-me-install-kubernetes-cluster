@@ -307,6 +307,7 @@ $ cat kube-proxy-csr.json
 
 生成 kube-proxy 客户端证书和私钥：
 
+需要在所有节点执行，或者从初始第一个节点拷贝到其他节点，但是需要注意证书的所有者要为当前用户，否则可能出现不可预期的错误。
 ``` bash
 $ cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem \
   -ca-key=/etc/kubernetes/ssl/ca-key.pem \
@@ -320,6 +321,7 @@ $
 ```
 
 ### 创建 kube-proxy kubeconfig 文件
+需要在所有节点执行
 
 ``` bash
 $ # 设置集群参数

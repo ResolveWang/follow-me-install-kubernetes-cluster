@@ -181,3 +181,8 @@ PING kube-dns.kube-system.svc.cluster.local (10.254.0.2): 48 data bytes
 ^C--- kube-dns.kube-system.svc.cluster.local ping statistics ---
 1 packets transmitted, 0 packets received, 100% packet loss
 ```
+
+补充：如果这里ping不通，检查下面两个原因
+> $DOCKER_NETWORK_OPTIONS 这个参数非常重要，需要在部署node节点的时候指定
+
+> iptables的原因，需要检查iptables规则是否正常。可以添加  'sudo iptables -P FORWARD ACCEPT' 测试一下。具体错误可以参考 https://github.com/opsnull/follow-me-install-kubernetes-cluster/issues/151
